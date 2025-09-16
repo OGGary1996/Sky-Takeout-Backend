@@ -28,35 +28,42 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
      * @param registry
      */
     protected void addInterceptors(InterceptorRegistry registry) {
-        log.info("开始注册自定义拦截器...");
+        log.info("Started registering interceptors...");
         registry.addInterceptor(jwtTokenAdminInterceptor)
                 .addPathPatterns("/admin/**")
                 .excludePathPatterns("/admin/employee/login");
     }
 
     /**
-     * 通过knife4j生成接口文档
+     * 通过SpringDoc 生成API文档
+     * 本Bean用于基础的API信息配置
      * @return
      */
     @Bean
     public OpenAPI customOpenAPI() {
+        log.info("Start generating API documentation...");
         return new OpenAPI()
                 .info(new Info()
-                        .title("苍穹外卖项目接口文档")
-                        .version("2.0")
-                        .description("苍穹外卖项目接口文档"));
+                        .title("Sky Takeout API Documentation")
+                        .version("V2.0")
+                        .description("This is the API documentation for the Sky Takeout application."));
     }
-    
+    /*
+    * 配置分组API文档
+    * 本Bean用于admin端（后台管理端）接口的分组
+    * */
     @Bean
     public GroupedOpenApi adminApi() {
+        log.info("Start grouping admin APIs...");
         return GroupedOpenApi.builder()
-                .group("管理端接口")
-                .pathsToMatch("/admin/**")
+                .group("AdminAPIs")
+                .pathsToMatch("/admin/**") // 只包含/admin路径下的Controller(以及里面的接口方法)
                 .build();
     }
 
     /**
      * 设置静态资源映射
+     * Swagger UI所需的静态资源
      * @param registry
      */
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {

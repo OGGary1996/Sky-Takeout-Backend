@@ -8,6 +8,10 @@ import com.sky.result.Result;
 import com.sky.service.EmployeeService;
 import com.sky.utils.JwtUtil;
 import com.sky.vo.EmployeeLoginVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +25,7 @@ import java.util.Map;
 /**
  * 员工管理
  */
+@Tag(name = "Employee Management")
 @RestController
 @RequestMapping("/admin/employee")
 @Slf4j
@@ -37,8 +42,14 @@ public class EmployeeController {
      * @param employeeLoginDTO
      * @return
      */
+    @Operation(summary = "Employee Login", description = "Allows an employee to log in using their username and password.")
     @PostMapping("/login")
-    public Result<EmployeeLoginVO> login(@RequestBody EmployeeLoginDTO employeeLoginDTO) {
+    public Result<EmployeeLoginVO> login(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "EmployeeLoginDTO",
+                    content = @Content(schema = @Schema(implementation = EmployeeLoginDTO.class)))
+            @RequestBody EmployeeLoginDTO employeeLoginDTO) {
         log.info("员工登录：{}", employeeLoginDTO);
 
         Employee employee = employeeService.login(employeeLoginDTO);
@@ -66,6 +77,7 @@ public class EmployeeController {
      *
      * @return
      */
+    @Operation(summary = "Employee Logout", description = "Allows an employee to log out.")
     @PostMapping("/logout")
     public Result<String> logout() {
         return Result.success();

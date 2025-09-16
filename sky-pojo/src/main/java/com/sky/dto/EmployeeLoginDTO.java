@@ -6,13 +6,13 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-@Schema(description = "员工登录时传递的数据模型")
+@Schema(description = "Employee Login Data Transfer Object")
 public class EmployeeLoginDTO implements Serializable {
 
-    @Schema(description = "用户名")
+    @Schema(description = "Username")
     private String username;
 
-    @Schema(description = "密码")
+    @Schema(description = "Password(not encrypted)")
     private String password;
 
 }

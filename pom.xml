@@ -26,7 +26,8 @@
         <druid>1.2.23</druid>
         <pagehelper>2.1.0</pagehelper>
         <aliyun.sdk.oss>3.18.1</aliyun.sdk.oss>
-        <knife4j>4.4.0</knife4j>
+        <knife4j>4.5.0</knife4j>
+        <springdoc>2.8.10</springdoc>
         <aspectj>1.9.22</aspectj>
         <jjwt>0.12.6</jjwt>
         <jaxb-api>2.3.1</jaxb-api>
@@ -77,9 +78,14 @@
             </dependency>
 
             <dependency>
-                <groupId>com.github.xiaoymin</groupId>
-                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
-                <version>${knife4j}</version>
+                  <groupId>com.github.xiaoymin</groupId>
+                  <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+                  <version>${knife4j}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc}</version>
             </dependency>
 
             <dependency>

@@ -38,19 +38,23 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
         }
 
-        //密码比对
-        // TODO 后期需要进行md5加密，然后再进行比对
-        if (!password.equals(employee.getPassword())) {
+        // 账号存在，进行密码比对
+        // 1. 首先获取到数据库中存储的加密后的密码
+        String encryptedPassword = employee.getPassword();
+        // 2. 对前端传递过来的明文密码进行加密，使用Spring提供的DigestUtils工具类,进行加密
+        password = DigestUtils.md5DigestAsHex(password.getBytes());
+        if (!password.equals(encryptedPassword)){
             //密码错误
             throw new PasswordErrorException(MessageConstant.PASSWORD_ERROR);
         }
 
+        // 密码比对通过，继续判断账号状态
         if (employee.getStatus() == StatusConstant.DISABLE) {
             //账号被锁定
             throw new AccountLockedException(MessageConstant.ACCOUNT_LOCKED);
         }
 
-        //3、返回实体对象
+        // 密码比对通过，账户状态通过，登录成功
         return employee;
     }
 
