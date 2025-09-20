@@ -17,7 +17,7 @@ public class Category implements Serializable {
 
     private Long id;
 
-    //类型: 1菜品分类 2套餐分类
+    //类型: 1表示菜品分类 2表示套餐分类
     private Integer type;
 
     //分类名称
@@ -26,7 +26,7 @@ public class Category implements Serializable {
     //顺序
     private Integer sort;
 
-    //分类状态 0标识禁用 1表示启用
+    //分类状态 0表示禁用 1表示启用，默认为0禁用状态
     private Integer status;
 
     //创建时间

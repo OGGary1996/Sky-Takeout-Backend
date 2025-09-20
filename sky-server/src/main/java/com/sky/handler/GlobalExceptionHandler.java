@@ -2,6 +2,7 @@ package com.sky.handler;
 
 import com.sky.constant.MessageConstant;
 import com.sky.exception.BaseException;
+import com.sky.exception.DeletionNotAllowedException;
 import com.sky.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -44,11 +45,25 @@ public class GlobalExceptionHandler {
             String[] split = message.split(" ");
             String duplicateUsername = split[2];
             // 常规的异常信息在常量类MessageConstant中定义
+            // 返回时调用异常信息
             return Result.error( duplicateUsername + MessageConstant.ALREADY_EXISTS);
         }
         // 其他SQL异常
         // TODO 可以继续扩展其他SQL异常的处理
         return Result.error(MessageConstant.UNKNOWN_ERROR);
+    }
+
+    /*
+    * 处理删除分类时，关联了菜品或套餐引发的异常
+    * @param ex
+    * @return
+    * */
+    @ExceptionHandler
+    public Result exceptionHandler(DeletionNotAllowedException ex){
+        log.error("Exception Message：{}", ex.getMessage());
+        // 直接返回异常信息
+        // 异常信息手动抛出时定义
+        return Result.error(ex.getMessage());
     }
 
 }
