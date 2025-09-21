@@ -44,11 +44,8 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = new Category();
         BeanUtils.copyProperties(categoryDTO, category);
         // 2. 设置其他必要的字段，例如创建时间、更新时间等
+        // 已经设置了AOP自动填充
         category.setStatus(StatusConstant.DISABLE); // 默认状态为禁用
-        category.setCreateTime(LocalDateTime.now());
-        category.setUpdateTime(LocalDateTime.now());
-        category.setCreateUser(BaseContext.getCurrentId());
-        category.setUpdateUser(BaseContext.getCurrentId());
         // 3. 调用 Mapper 层的方法将数据插入数据库
         categoryMapper.insertCategory(category);
     }
@@ -109,8 +106,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = new Category();
         BeanUtils.copyProperties(categoryDTO, category);
         // 2. 设置其他必要的字段，例如更新时间等
-        category.setUpdateTime(LocalDateTime.now());
-        category.setUpdateUser(BaseContext.getCurrentId());
+        //  已经设置了AOP自动填充
         // 3. 调用 Mapper 层的方法将数据更新到数据库
         // 注意：这里的update方法是通用修改的方法，通过动态SQL实现
         categoryMapper.update(category);
@@ -127,9 +123,8 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = Category.builder()
                 .id(id)
                 .status(status)
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
                 .build();
+        // 已经设置了AOP自动填充
         // 2. 调用 Mapper 层的方法将数据更新到数据库
         categoryMapper.update(category);
     }

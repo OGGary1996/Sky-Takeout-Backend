@@ -83,12 +83,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 3. 调用常量类PasswordConstant常量类设置初始密码，并进行MD5加密
         employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
         // 4. 设置其他的属性，创建时间、更新时间
-        employee.setCreateTime(LocalDateTime.now());
-        employee.setUpdateTime(LocalDateTime.now());
-        // 5. 创建人、修改人
-        employee.setCreateUser(BaseContext.getCurrentId());
-        employee.setUpdateUser(BaseContext.getCurrentId());
-        // 6. 调用Mapper，执行插入操作
+        // 已经设置了AOP自动填充
+        // 5. 调用Mapper，执行插入操作
         employeeMapper.insertEmployee(employee);
     }
 
@@ -122,10 +118,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = Employee.builder()
                 .id(id)
                 .status(status)
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
                 .build();
-
+        // 已经设置了AOP自动填充
         employeeMapper.updateById(employee);
     }
 
@@ -153,8 +147,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = new Employee();
         BeanUtils.copyProperties(employeeDTO, employee);
         // 2. 设置其他的属性，更新时间 、修改人
-        employee.setUpdateTime(LocalDateTime.now());
-        employee.setUpdateUser(BaseContext.getCurrentId());
+        // 已经设置了AOP自动填充
         // 3. 调用Mapper，执行更新操作
         employeeMapper.updateById(employee);
     }
