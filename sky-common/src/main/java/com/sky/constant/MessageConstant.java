@@ -17,6 +17,7 @@ public class MessageConstant {
     public static final String ADDRESS_BOOK_IS_NULL = "Address book is empty, cannot place order";
     public static final String LOGIN_FAILED = "Login failed";
     public static final String UPLOAD_FAILED = "Upload failed";
+    public static final String DELETE_FAILED = "Delete failed";
     public static final String SETMEAL_ENABLE_FAILED = "Current set meal contains disabled dishes, cannot enable";
     public static final String PASSWORD_EDIT_FAILED = "Password change failed";
     public static final String DISH_ON_SALE = "Dishes on sale cannot be deleted";

@@ -12,6 +12,10 @@ import java.io.ByteArrayInputStream;
 @Data
 @AllArgsConstructor
 @Slf4j
+@Deprecated(since = "use com.kezhang.aliyun-oss-operator-spring-boot-parent instead")
+/* 不需要使用这个工具类了，可以使用 aliyun-oss-operator-spring-boot-parent 这个组件
+ * 这个组件封装了阿里云OSS的操作，使用起来更方便
+ */
 public class AliOssUtil {
 
     private String endpoint;

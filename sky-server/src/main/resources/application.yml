@@ -38,3 +38,13 @@ sky:
     # 这里设置为了token, 后端期望请求头是：token: <JWT字符串>
     # 而不是标准的：Authorization: Bearer <JWT字符串>
     admin-token-name: token
+
+  # 定义文件上传到 ！阿里云OSS ！的相关配置
+  aliyun:
+    oss:
+      bucket-name: ${aliyun.oss.bucket-name}
+      endpoint: ${aliyun.oss.endpoint}
+      #关于OSS支持的Region与Endpoint的对应关系，
+      # 请参见https://www.alibabacloud.com/help/zh/oss/user-guide/regions-and-endpoints。
+      region: ${aliyun.oss.region}
+      dir: ${aliyun.oss.dir}}  # 文件存储目录

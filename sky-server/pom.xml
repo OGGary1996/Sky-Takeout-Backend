@@ -106,6 +106,13 @@
             <artifactId>jaxb-api</artifactId>
         </dependency>
 
+        <!-- 引用第三方模块 aliyun-oss-operator-spring-boot-starter -->
+        <dependency>
+            <groupId>com.kezhang</groupId>
+            <artifactId>aliyun-oss-operator-spring-boot-starter</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
         <!-- poi -->
         <dependency>
             <groupId>org.apache.poi</groupId>

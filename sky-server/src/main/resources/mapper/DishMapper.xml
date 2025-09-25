@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.DishMapper">
+
+    <!-- 插入菜品信息表 -->
+    <insert id="insert" parameterType="com.sky.entity.Dish" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO dish (name, category_id, price, image, description, status)
+        VALUES (#{name}, #{categoryId}, #{price}, #{image}, #{description}, #{status})
+    </insert>
+
+    <!-- 条件分类查询 -->
+    <select id="selectPage" resultType="com.sky.vo.DishVO">
+        SELECT
+            d.id,
+            d.name,
+            c.name AS categoryName,
+            d.price,
+            d.image,
+            d.description,
+            d.status,
+            d.update_time AS updateTime
+        FROM dish d
+        LEFT JOIN category c ON d.category_id = c.id
+        <where>
+            <if test="name != null and name != ''">
+                AND d.name LIKE CONCAT('%',#{name},'%')
+            </if>
+            <if test="categoryId != null">
+                AND d.category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                AND d.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- 批量/单个删除 -->
+    <!-- 1. 查询ids中的菜品中的status=1的数量，大于0，则不能删除 -->
+    <select id="countByIdsAndStatus" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM dish
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        AND status = 1
+    </select>
+    <!-- 2. 获取images字段，用于删除OSS存储 -->
+    <select id="getImagesByIds" resultType="java.lang.String">
+        SELECT image FROM dish
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+    <!-- 3. 删除 -->
+    <delete id="deleteBatch">
+        DELETE FROM dish
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 修改菜品信息,动态SQL -->
+    <update id="updateById" parameterType="com.sky.entity.Dish">
+        UPDATE dish
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="image != null and image != ''">image = #{image},</if>
+            <if test="description != null and description != ''">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 获取所有在售的dish -->
+    <select id="listByCategoryId" resultType="com.sky.vo.DishVO">
+        SELECT * FROM dish
+        <where>
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
+            </if>
+            AND status = 1
+        </where>
+    </select>
+
+
+</mapper>

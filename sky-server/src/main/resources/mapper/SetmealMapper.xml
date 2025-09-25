@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.SetmealMapper">
+
+
+    <!-- 批量修改status为0 -->
+    <update id="setmealStopBatch" parameterType="java.util.List">
+        UPDATE setmeal
+        SET status = 0
+        WHERE id IN
+        <foreach collection="setmealIds" item="setmealId" separator="," open="(" close=")">
+            #{setmealId}
+        </foreach>
+    </update>
+
+    <!-- 通用修改方法 -->
+    <update id="updateById" parameterType="com.sky.entity.Setmeal">
+        UPDATE setmeal
+        <set>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="description != null and description != ''">description = #{description},</if>
+            <if test="image != null and image != ''">image = #{image},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+    </update>
+
+</mapper>
