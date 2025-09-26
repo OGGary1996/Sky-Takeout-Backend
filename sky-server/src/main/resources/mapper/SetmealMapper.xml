@@ -2,8 +2,6 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.SetmealMapper">
-
-
     <!-- 批量修改status为0 -->
     <update id="setmealStopBatch" parameterType="java.util.List">
         UPDATE setmeal
@@ -13,6 +11,59 @@
             #{setmealId}
         </foreach>
     </update>
+
+    <!-- 新增setmeal -->
+    <insert id="insert" parameterType="com.sky.entity.Setmeal" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO setmeal (category_id, name, price, status, description, image, create_time, update_time, create_user, update_user)
+        VALUES (#{categoryId}, #{name}, #{price}, #{status}, #{description},#{image}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
+    </insert>
+
+    <!-- 条件分页查询 -->
+    <select id="selectPage" resultType="com.sky.vo.SetmealVO" parameterType="com.sky.dto.SetmealPageQueryDTO">
+        SELECT
+            s.id,
+            s.category_id,
+            s.name,
+            s.price,
+            s.status,
+            s.description,
+            s.image,
+            s.update_time,
+            c.name AS categoryName
+        FROM setmeal s
+        LEFT JOIN category c ON s.category_id = c.id
+        <where>
+            <if test="name != null and name !=''">s.name LIKE CONCAT("%",#{name},"%")</if>
+            <if test="categoryId != null">AND s.category_id = #{categoryId}</if>
+            <if test="status != null">AND s.status = #{status}</if>
+        </where>
+    </select>
+
+    <!-- 根据ids判断是否在售 -->
+    <select id="countByIdsAndStatus" resultType="java.lang.Integer" parameterType="java.util.List">
+        SELECT COUNT(*) FROM setmeal
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        AND status = 1
+    </select>
+    <!-- 获取images字段 -->
+    <select id="getImagesByIds" resultType="java.lang.String" parameterType="java.util.List">
+        SELECT image FROM setmeal
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+    <!-- 批量删除 -->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        DELETE FROM setmeal
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
 
     <!-- 通用修改方法 -->
     <update id="updateById" parameterType="com.sky.entity.Setmeal">

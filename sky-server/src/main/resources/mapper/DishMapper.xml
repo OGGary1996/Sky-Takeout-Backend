@@ -90,5 +90,15 @@
         </where>
     </select>
 
+    <!-- 根据ids判断是否有停售状态的dish -->
+    <select id="countByIdsAndNotStatus" resultType="java.lang.Integer" parameterType="java.util.List">
+        SELECT COUNT(*) FROM dish
+        WHERE id IN
+        <foreach collection="dishIds" item="dishId" separator="," open="(" close=")">
+            #{dishId}
+        </foreach>
+        AND status = 0
+    </select>
+
 
 </mapper>

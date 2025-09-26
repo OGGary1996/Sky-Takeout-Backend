@@ -89,4 +89,11 @@ public interface DishMapper {
     * @Return List<DishVO>
     * */
     List<DishVO> listByCategoryId(Long categoryId);
+
+    /*
+    * 根据ids判断是否有停售的菜品，如果有停售的菜品，则不能启售响应的套餐
+    * @param List<Long> ids
+    * @Return Integer (status=0的数量)
+    * */
+    Integer countByIdsAndNotStatus(List<Long> ids);
 }
