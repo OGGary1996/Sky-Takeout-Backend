@@ -1,6 +1,7 @@
 server:
   port: 8080
 
+# Spring配置:MySQL数据源和Redis数据源
 spring:
   profiles:
     active: dev
@@ -12,6 +13,20 @@ spring:
     username: ${sky.datasource.username}
     password: ${sky.datasource.password}
 
+  data:
+    redis:
+      host: ${sky.data.redis.host}
+      port: ${sky.data.redis.port}
+      password: ${sky.data.redis.password}
+      database: ${sky.data.redis.database}
+      lettuce:
+        pool:
+          max-active: ${sky.data.redis.lettuce.pool.max-active}
+          max-wait: ${sky.data.redis.lettuce.pool.max-wait}
+          max-idle: ${sky.data.redis.lettuce.pool.max-idle}
+          min-idle: ${sky.data.redis.lettuce.pool.min-idle}
+
+# MyBatis配置: 配置MyBatis的Mapper文件位置和实体类位置
 mybatis:
   #mapper配置文件
   mapper-locations: classpath:mapper/*.xml
@@ -28,8 +43,12 @@ logging:
         service: info
         controller: info
 
+
+# 自定义配置:
 sky:
+  # JWT配置
   jwt:
+    # 管理端登录
     # 设置jwt签名加密时使用的秘钥
     admin-secret-key: "a8f3b2c4d5e6f7g8h9i0j1k2l3m4n5o6"
     # 设置jwt过期时间
@@ -38,6 +57,14 @@ sky:
     # 这里设置为了token, 后端期望请求头是：token: <JWT字符串>
     # 而不是标准的：Authorization: Bearer <JWT字符串>
     admin-token-name: token
+    # 微信登录
+    # 设置jwt签名加密时使用的秘钥
+    user-secret-key: "u8f3b2c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4"
+    # 设置jwt过期时间
+    user-ttl: 2592000000 # 30天,单位毫秒
+    # 设置前端传递过来的令牌名称
+    # 这里设置为authorization, 前端请求头是：authorization: <JWT字符串>
+    user-token-name: authorization
 
   # 定义文件上传到 ！阿里云OSS ！的相关配置
   aliyun:
@@ -48,3 +75,8 @@ sky:
       # 请参见https://www.alibabacloud.com/help/zh/oss/user-guide/regions-and-endpoints。
       region: ${aliyun.oss.region}
       dir: ${aliyun.oss.dir}}  # 文件存储目录
+
+  # 微信登录
+  wechat:
+    appid: ${sky.wechat.appid}
+    secret: ${sky.wechat.secret}

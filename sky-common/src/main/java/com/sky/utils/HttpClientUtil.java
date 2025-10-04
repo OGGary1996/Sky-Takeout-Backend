@@ -28,7 +28,7 @@ public class HttpClientUtil {
     static final  int TIMEOUT_MSEC = 5 * 1000;
 
     /**
-     * 发送GET方式请求
+     * 发送GET方式 + 请求参数 请求
      * @param url
      * @param paramMap
      * @return
@@ -74,7 +74,7 @@ public class HttpClientUtil {
     }
 
     /**
-     * 发送POST方式请求
+     * 发送POST方式 + 表单方式 请求
      * @param url
      * @param paramMap
      * @return
@@ -121,7 +121,7 @@ public class HttpClientUtil {
     }
 
     /**
-     * 发送POST方式请求
+     * 发送POST方式 + JSON请求体 请求
      * @param url
      * @param paramMap
      * @return
