@@ -14,9 +14,9 @@
     <insert id="insertBatch" parameterType="java.util.List">
         INSERT INTO setmeal_dish (setmeal_id, dish_id, name, price, copies)
         VALUES
-        <foreach collection="setmealDishes" item="setmealDish" separator="," open="(" close=")">
+        <foreach collection="setmealDishes" item="setmealDish" separator=",">
             (#{setmealDish.setmealId}, #{setmealDish.dishId}, #{setmealDish.name}, #{setmealDish.price}, #{setmealDish.copies})
-        </foreach>>
+        </foreach>
     </insert>
 
     <!--  根据setmealId批量删除  -->
@@ -27,6 +27,18 @@
             #{id}
         </foreach>
     </delete>
+
+    <!--  根据setmealId 多表查询其中的dish  -->
+    <select id="getDishItemBySetmealId" resultType="com.sky.vo.DishItemVO">
+        SELECT
+            d.name,
+            sd.copies,
+            d.image,
+            d.description
+        FROM setmeal_dish sd
+        LEFT JOIN dish d ON sd.dish_id = d.id
+        WHERE sd.setmeal_id = #{setmealId}
+    </select>
 
 
 

@@ -88,7 +88,7 @@ public interface DishMapper {
     * @param Long categoryId，非必须，可以根据分类id查询
     * @Return List<DishVO>
     * */
-    List<DishVO> listByCategoryId(Long categoryId);
+    List<Dish> listByCategoryId(Long categoryId);
 
     /*
     * 根据ids判断是否有停售的菜品，如果有停售的菜品，则不能启售响应的套餐

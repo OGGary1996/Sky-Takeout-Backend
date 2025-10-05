@@ -16,6 +16,7 @@ import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
+import com.sky.vo.DishItemVO;
 import com.sky.vo.SetmealVO;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.BeanUtils;
@@ -195,5 +196,31 @@ public class SetmealServiceImpl implements SetmealService {
                 .status(status)
                 .build();
         setmealMapper.updateById(setmeal);
+    }
+
+    /*
+    * 根据categoryId查询所有在售套餐
+    * @param Long categoryId
+    * @return List<Setmeal>
+    * 注意：
+    *  1. 需要查询套餐表(setmeal)
+    *  2. 只查询在售的套餐
+    * */
+    @Override
+    public List<Setmeal> selectList(Long categoryId) {
+        return setmealMapper.selectList(categoryId);
+    }
+
+    /*`
+    * 根据套餐id查询包含的菜品列表
+    * @param Long setmealId
+    * @return List<DishItemVO>
+    * 注意：
+    *  1. 需要查询套餐菜品关系表(setmeal_dish)
+    *  2. 需要查询菜品表(dish)，获取菜品的图片以及其他信息
+    * */
+    @Override
+    public List<DishItemVO> getDishItemById(Long setmealId) {
+          return setmealDishMapper.getDishItemBySetmealId(setmealId);
     }
 }

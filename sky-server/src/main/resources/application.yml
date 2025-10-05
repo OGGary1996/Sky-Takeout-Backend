@@ -63,8 +63,8 @@ sky:
     # 设置jwt过期时间
     user-ttl: 2592000000 # 30天,单位毫秒
     # 设置前端传递过来的令牌名称
-    # 这里设置为authorization, 前端请求头是：authorization: <JWT字符串>
-    user-token-name: authorization
+    # 这里设置为authentication, 前端请求头必须是：authentication: <JWT字符串>，前后端需要配合
+    user-token-name: authentication
 
   # 定义文件上传到 ！阿里云OSS ！的相关配置
   aliyun:

@@ -80,4 +80,26 @@
         </set>
     </update>
 
+    <!--  根据categoryId 获取所有在售的setmeal  -->
+    <select id="selectList" resultType="com.sky.entity.Setmeal">
+        SELECT
+            id,
+            category_id,
+            name,
+            price,
+            status,
+            description,
+            image,
+            create_time,
+            update_time,
+            create_user,
+            update_user
+        FROM setmeal
+        <where>
+            <if test="categoryId != null">category_id = #{categoryId}</if>
+        </where>
+        AND status = 1
+    </select>
+
+
 </mapper>

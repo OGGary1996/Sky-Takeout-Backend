@@ -80,7 +80,7 @@
     </update>
 
     <!-- 获取所有在售的dish -->
-    <select id="listByCategoryId" resultType="com.sky.vo.DishVO">
+    <select id="listByCategoryId" resultType="com.sky.entity.Dish">
         SELECT * FROM dish
         <where>
             <if test="categoryId != null">

@@ -2,9 +2,11 @@ package com.sky.controller.admin;
 
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Setmeal;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.SetmealService;
+import com.sky.vo.DishItemVO;
 import com.sky.vo.SetmealVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -100,5 +102,31 @@ public class SetmealController {
         log.info("Setmeal ID: {}, Status to set: {}", id, status);
         setmealService.setSetmealStatus(status, id);
         return Result.success();
+    }
+
+    /*
+    * 根据categoryId查询所有在售套餐
+    * @param Long categoryId
+    * @return Result<List<Setmeal>>
+    * */
+    @Operation(summary = "List Setmeals by Category ID" , description = "Retrieve all available setmeals for a given category ID")
+    @GetMapping("/list")
+    public Result<List<Setmeal>> list(Long categoryId){
+        log.info("Category ID to list setmeals: {}", categoryId);
+        List<Setmeal> setmeals = setmealService.selectList(categoryId);
+        return Result.success(setmeals);
+    }
+
+    /*
+    * 根据setmealId查询包含的菜品列表
+    * @param Long setmealId
+    * @return Result<List<DishItemVO>>
+    * */
+    @Operation(summary = "Get Dishes by Setmeal ID" , description = "Retrieve the list of dishes included in a specific setmeal")
+    @GetMapping("/dish/{id}")
+    public Result<List<DishItemVO>> dishList(@PathVariable("id") Long setmealId){
+        log.info("Setmeal ID to retrieve dishes: {}", setmealId);
+        List<DishItemVO> dishes = setmealService.getDishItemById(setmealId);
+        return Result.success(dishes);
     }
 }

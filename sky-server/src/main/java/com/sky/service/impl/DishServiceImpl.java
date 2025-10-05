@@ -232,6 +232,21 @@ public class DishServiceImpl implements DishService {
     * */
     @Override
     public List<DishVO> listByCategoryId(Long categoryId) {
-       return dishMapper.listByCategoryId(categoryId);
+       // 1. 查询所有的Dish
+        List<Dish> dishes = dishMapper.listByCategoryId(categoryId);
+       // 2. 转换为DishVO
+        // 2.1 查询口味数据
+        // 2.2 封装为DishVO
+        // 2.3 返回
+        return dishes.stream().map(dish -> {
+            // 2.1 查询口味数据
+            List<DishFlavor> dishFlavors = dishFlavorMapper.selectByDishId(dish.getId());
+            // 2.2 封装为DishVO
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(dish, dishVO);
+            dishVO.setFlavors(dishFlavors);
+            // 2.3 返回
+            return dishVO;
+        }).toList();
     }
 }
