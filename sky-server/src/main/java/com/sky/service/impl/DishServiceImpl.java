@@ -21,26 +21,33 @@ import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.DishService;
 import com.sky.vo.DishVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
+@Slf4j
 public class DishServiceImpl implements DishService {
     private final DishMapper dishMapper;
     private final DishFlavorMapper dishFlavorMapper;
     private final SetmealDishMapper setmealDishMapper;
     private final AliyunOssUtil aliyunOssUtil;
     private final SetmealMapper setmealMapper;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public DishServiceImpl(DishMapper dishMapper, DishFlavorMapper dishFlavorMapper, SetmealDishMapper setmealDishMapper, AliyunOssUtil aliyunOssUtil, SetmealMapper setmealMapper) {
+    public DishServiceImpl(DishMapper dishMapper, DishFlavorMapper dishFlavorMapper, SetmealDishMapper setmealDishMapper, AliyunOssUtil aliyunOssUtil, SetmealMapper setmealMapper, RedisTemplate<String, Object> redisTemplate) {
         this.dishMapper = dishMapper;
         this.dishFlavorMapper = dishFlavorMapper;
         this.setmealDishMapper = setmealDishMapper;
         this.aliyunOssUtil = aliyunOssUtil;
         this.setmealMapper = setmealMapper;
+        this.redisTemplate = redisTemplate;
     }
 
     /*
@@ -59,6 +66,10 @@ public class DishServiceImpl implements DishService {
     *  2. dish_id是dish表的主键，但是在插入dish时，还没有插入到数据库，主键id还没生成
     *  3. 需要在DishMapper的insert方法中，使用MyBatis的useGeneratedKeys属性，主键回填
     *  4. 然后在service层代码中，获取到Dish的id，设置到每个DishFlavor对象的dishId字段中
+    *
+    * 改造，清除Redis缓存：
+    *  1. 新增菜品时，默认是起售状态，需要清除Redis缓存
+    *  2. key的格式：sky:dish::cat:{categoryId}
     * */
     @Transactional
     @Override
@@ -82,6 +93,12 @@ public class DishServiceImpl implements DishService {
             // 2.3 保存菜品口味数据到菜品口味表dish
             dishFlavorMapper.insertBatch(flavors);
         }
+
+        // 3. 清除Redis缓存
+          // 3.1 构建key
+        String key = "sky:dish::cat:" + dish.getCategoryId();
+         // 3.2 删除缓存
+        clearCache(key);
     }
 
     /*
@@ -171,10 +188,22 @@ public class DishServiceImpl implements DishService {
     * 注意：
     *  1. 需要同时操作两张表：dish,dish_flavor
     *  2. 对于dish_flavor表，先删除原有口味数据，再插入口味数据，保证数据一致性
+    *
+    * 改造，清除Redis缓存：
+    *  1. 如果涉及到修改categoryId，则需要清除两条缓存
+    *   1.1 原categoryId对应的缓存
+    *   1.2 新categoryId对应的缓存
+    *  2. 涉及到其他的修改，则需要清除当前的categoryId对应的缓存
     * */
     @Transactional
     @Override
     public void updateWithFlavor(DishDTO dishDTO) {
+        // 确认是否修改了categoryId，用于清除Redis缓存
+        Dish oldDish = dishMapper.selectById(dishDTO.getId());
+        Long oldCategoryId = oldDish.getCategoryId();
+        Long newCategoryId = dishDTO.getCategoryId();
+        log.debug("oldCategoryId:{}, newCategoryId:{}", oldCategoryId, newCategoryId);
+
         // 1. 更新dish表
         Dish dish = new Dish();
         BeanUtils.copyProperties(dishDTO, dish);
@@ -193,6 +222,19 @@ public class DishServiceImpl implements DishService {
             // 批量插入
             dishFlavorMapper.insertBatch(flavors);
         }
+
+        // 3. 清除Redis缓存
+          // 3.1 判断是否修改了categoryId，如果修改了，则删除原categoryId对应的缓存
+        if(!oldCategoryId.equals(newCategoryId)){
+            log.debug("CategoryId changed, clear two keys");
+            String oldKey = "sky:dish::cat:" + oldCategoryId;
+            String newKey = "sky:dish::cat:" + newCategoryId;
+            clearCache(oldKey, newKey);
+        }else{
+            log.debug("CategoryId not changed, clear one key");
+            String key = "sky:dish::cat:" + newCategoryId;
+            clearCache(key);
+        }
     }
 
     /*
@@ -203,9 +245,12 @@ public class DishServiceImpl implements DishService {
     *  1. 如果是停售操作，需要检查setmeal_dish表，是否关联了套餐
     *  2. 如果关联了setmeal，则整个setmeal都需要停售
     *  3. 涉及到setmeal表和setmeal_dish表
+    *
+    * 改造，清除Redis缓存：
+    *  1. 菜品起售/停售，均需要清除Redis缓存
+    *  2. 需要获取到菜品的categoryId，构建key，进行删除
     * */
     @Transactional
-    @AutoFill(OperationType.UPDATE)
     @Override
     public void updateStatusById(Integer status, Long id) {
         // 1. 封装Dish对象
@@ -216,37 +261,74 @@ public class DishServiceImpl implements DishService {
         // 2. 更新菜品状态,通用修改方法
         dishMapper.updateById(dish);
         // 3. 如果是停售操作，需要检查setmeal_dish表，是否关联了套餐
-        if (status == StatusConstant.DISABLE){
+        if (status.equals(StatusConstant.DISABLE)){
             List<Long> setmealIds = setmealDishMapper.getSetmealIdsByDishId(id);
             // 3.1 如果关联了套餐，则整个setmeal都需要停售
             if (setmealIds != null && !setmealIds.isEmpty()){
                 setmealMapper.setmealStopBatch(setmealIds);
             }
         }
+
+        // 4. 清除Redis缓存
+          // 4.1 获取到菜品的categoryId
+        Dish currentDish = dishMapper.selectById(id);
+        Long categoryId = currentDish.getCategoryId();
+        // 4.2 构建key
+        String key = "sky:dish::cat:" + categoryId;
+        // 4.3 删除缓存
+        clearCache(key);
     }
 
     /*
     * 显示所有在售的dish
     * @param Long categoryId，非必须，可以根据分类id查询
     * @Return List<DishVO>
+    * 改造：使用Redis缓存菜品数据
+    * 策略：
+    *  1. 读：先读缓存，缓存中有，直接返回；缓存中没有，查询数据库，然后将数据存入缓存
+    *  2. 写：新增/修改/删除菜品时，删除缓存数据（因为无法精确更新缓存数据），让缓存失效，后续读取时再走读策略
     * */
     @Override
     public List<DishVO> listByCategoryId(Long categoryId) {
-       // 1. 查询所有的Dish
+        // 1. 构建key，格式：sky:dish::cat:{categoryId}
+        String key = "sky:dish::cat:" + categoryId;
+        // 2. 先从Redis中获取缓存数据，RedisTemplate序列化器会自动将JSON字符串转换为List<DishVO>对象
+        List<DishVO> list = (List<DishVO>) redisTemplate.opsForValue().get(key);
+        // 2.1 如果存在，则直接把数据返回
+        if (list != null && !list.isEmpty()){
+            log.debug("Dishes exists in Redis, get Dishes from Redis");
+            return list;
+        }
+        log.debug("Dishes not exists in Redis, get Dishes from Database");
+        // 2.2 如果不存在，则查询数据库：原始代码：
+          // 2.2.1 查询所有的Dish
         List<Dish> dishes = dishMapper.listByCategoryId(categoryId);
-       // 2. 转换为DishVO
-        // 2.1 查询口味数据
-        // 2.2 封装为DishVO
-        // 2.3 返回
-        return dishes.stream().map(dish -> {
-            // 2.1 查询口味数据
+         // 2.2.2 转换为DishVO
+        list = dishes.stream().map(dish -> {
+            // 2.2.2.1 查询口味数据
             List<DishFlavor> dishFlavors = dishFlavorMapper.selectByDishId(dish.getId());
-            // 2.2 封装为DishVO
+            // 2.2.2.2 封装为DishVO
             DishVO dishVO = new DishVO();
             BeanUtils.copyProperties(dish, dishVO);
             dishVO.setFlavors(dishFlavors);
-            // 2.3 返回
+            // 2.2.2.3 返回
             return dishVO;
         }).toList();
+        // 2.3 将数据存入Redis缓存
+        redisTemplate.opsForValue().set(key, list);
+        // 2.4 返回
+        return list;
+    }
+
+    /*
+    * 删除缓存方法
+    * @param String key1, String key2...
+    * @return
+    * */
+    private void clearCache(String ... keys){
+        log.debug("Clear Redis Cache...");
+        Set<String> keyset = Set.of(keys);
+        redisTemplate.delete(keyset);
+        log.debug("Clear Redis Cache Success: {}", keyset);
     }
 }

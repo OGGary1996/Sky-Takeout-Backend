@@ -26,7 +26,6 @@ public interface SetmealMapper {
     * @param List<Long> setmealIds
     * @return
     * */
-    @AutoFill(OperationType.UPDATE)
     void setmealStopBatch(List<Long> setmealIds);
 
     /*

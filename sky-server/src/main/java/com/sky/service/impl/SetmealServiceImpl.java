@@ -19,14 +19,20 @@ import com.sky.service.SetmealService;
 import com.sky.vo.DishItemVO;
 import com.sky.vo.SetmealVO;
 import io.swagger.v3.oas.annotations.Operation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Slf4j
+@CacheConfig(cacheNames = "sky:setmeal")
 public class SetmealServiceImpl implements SetmealService {
     private final SetmealMapper setmealMapper;
     private final SetmealDishMapper setmealDishMapper;
@@ -49,9 +55,16 @@ public class SetmealServiceImpl implements SetmealService {
     *  2. 前端需要显示dishId 和dishName对应的下拉框，接口已经实现
     *  3. 前端需要实现图片上传，接口已经实现
     *  4. 继续实现新增套餐功能
+    *
+    * 改造：删除缓存，使用Spring Cache
+    * 新增方法：@CacheEvict(key = "cat:" + #setmealDTO.categoryId)
+    * 注意：不能使用@CachePut,因为：
+    *  1. 缓存对象是List<Setmeal>，而不是Setmeal
+    *  2. @CachePut是整体替换缓存，而不是追加或者续写缓存
     * */
     @Transactional
     @Override
+    @CacheEvict(key = "'cat:' + #setmealDTO.categoryId")
     public void insertSetmealWithDish(SetmealDTO setmealDTO) {
         // 1. 类型转换： SetmealDTO -> Setmeal
         Setmeal setmeal = new Setmeal();
@@ -94,9 +107,14 @@ public class SetmealServiceImpl implements SetmealService {
     *  1. 如果status = 1 ，则不能删除
     *  2. 删除套餐之后，需要同时阐述setmeal_dish表中的数据
     *  3. 删除套餐后，需要同时删除阿里云OSS中的图片,需要在删除之前获取到image字段
+    *
+    * 改造：删除缓存，使用Spring Cache
+    * 删除方法：@CacheEvict(allEntries = true)
+    * 注意：只能使用allEntries = true,因为无法确定删除的套餐属于哪个分类
     * */
     @Transactional
     @Override
+    @CacheEvict(allEntries = true)
     public void deleteByIds(List<Long> ids) {
         // 1. 判断是否在售
         Integer count = setmealMapper.countByIdsAndStatus(ids);
@@ -147,9 +165,14 @@ public class SetmealServiceImpl implements SetmealService {
     * @return
     * 注意：
     *  1. 需要修改套餐表(setmeal)和套餐菜品关系
+    *
+    * 改造：删除缓存，使用Spring Cache
+    * 删除方法：@CacheEvict(allEntries = true)
+    * 注意：只能使用allEntries = true,因为无法确定修改的套餐属于哪个分类
     * */
     @Transactional
     @Override
+    @CacheEvict(allEntries = true)
     public void updateSetmealWithDish(SetmealDTO setmealDTO) {
         // 1. 类型转换： SetmealDTO -> Setmeal
         Setmeal setmeal = new Setmeal();
@@ -175,11 +198,15 @@ public class SetmealServiceImpl implements SetmealService {
     * 注意：
     *  1. 停售套餐与dish是否启用无关，停售dish时，如果关联了套餐，则套餐会自动停售
     *  2. 启售套餐时，如果其中dish有停售的，则不能启售
+    *
+    * 改造：删除缓存，使用Spring Cache
+    * 删除方法：@CacheEvict(allEntries = true)
     * */
     @Override
+    @CacheEvict(allEntries = true)
     public void setSetmealStatus(Integer status, Long id) {
         // 1. 判断停售或启售
-        if (status == StatusConstant.ENABLE){
+        if (status.equals(StatusConstant.ENABLE)){
             // 2. 如果是启售套餐，先判断其中dish是否有停售的
             // 2.1 根据id获取到setmeal_dish表中的dish_id
             List<SetmealDish> setmealDishes = setmealDishMapper.selectBySetmealId(id);
@@ -205,8 +232,12 @@ public class SetmealServiceImpl implements SetmealService {
     * 注意：
     *  1. 需要查询套餐表(setmeal)
     *  2. 只查询在售的套餐
+    *
+    * 改造：加入缓存，使用Spring Cache
+    * 查询方法：@Cacheable(key = "'cat:' + #categoryId")
     * */
     @Override
+    @Cacheable(key = "'cat:' + #categoryId")
     public List<Setmeal> selectList(Long categoryId) {
         return setmealMapper.selectList(categoryId);
     }
@@ -218,8 +249,12 @@ public class SetmealServiceImpl implements SetmealService {
     * 注意：
     *  1. 需要查询套餐菜品关系表(setmeal_dish)
     *  2. 需要查询菜品表(dish)，获取菜品的图片以及其他信息
+    *
+    * 改造：加入缓存，使用Spring Cache
+    * 查询方法：@Cacheable(key = "'set:' + #setmealId")
     * */
     @Override
+    @Cacheable(key = "'dish:' + #setmealId")
     public List<DishItemVO> getDishItemById(Long setmealId) {
           return setmealDishMapper.getDishItemBySetmealId(setmealId);
     }
