@@ -11,6 +11,14 @@ import org.apache.ibatis.annotations.Select;
 public interface UserMapper {
 
     /*
+    * 根据id查询用户
+    * @param id 用户id
+    * @return User对象
+    * */
+    @Select("SELECT id, openid, name, phone, sex, id_number, avatar, create_time FROM user WHERE id = #{id}")
+    User getById(Long id);
+
+    /*
     * 根据openid查询用户
     * 用于判断用户是否注册
     * @param openid 微信用户唯一标识
