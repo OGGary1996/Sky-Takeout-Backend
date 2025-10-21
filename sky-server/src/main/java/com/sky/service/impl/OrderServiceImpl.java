@@ -20,6 +20,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,19 +45,21 @@ public class OrderServiceImpl implements OrderService {
     private final OrderDetailMapper orderDetailMapper;
     private final UserMapper userMapper;
     private final WeChatPayUtil weChatPayUtil;
+    private final WebSocketServer webSocketServer;
     @Value("${sky.shop.address}")
     private String shopAddress;
     @Value("${sky.baidu.ak}")
     private String ak;
 
     @Autowired
-    public OrderServiceImpl(AddressBookMapper addressBookMapper, ShoppingCartMapper shoppingCartMapper, OrderMapper orderMapper, OrderDetailMapper orderDetailMapper, UserMapper userMapper, WeChatPayUtil weChatPayUtil) {
+    public OrderServiceImpl(AddressBookMapper addressBookMapper, ShoppingCartMapper shoppingCartMapper, OrderMapper orderMapper, OrderDetailMapper orderDetailMapper, UserMapper userMapper, WeChatPayUtil weChatPayUtil, WebSocketServer webSocketServer) {
         this.addressBookMapper = addressBookMapper;
         this.shoppingCartMapper = shoppingCartMapper;
         this.orderMapper = orderMapper;
         this.orderDetailMapper = orderDetailMapper;
         this.userMapper = userMapper;
         this.weChatPayUtil = weChatPayUtil;
+        this.webSocketServer = webSocketServer;
     }
 
     /*
@@ -178,8 +181,17 @@ public class OrderServiceImpl implements OrderService {
                 .payStatus(Orders.PAID)
                 .checkoutTime(LocalDateTime.now())
                 .build();
-
         orderMapper.update(orders);
+
+        // 下单成功，调用WebSocketServer中的sendMessage方法
+          // 1. 构建Message Map,包含type,orderId,content
+        Map<String,String> messageMap = new HashMap<>();
+        messageMap.put("type","1"); // 1 表示来单提醒
+        messageMap.put("orderId",ordersDB.getId().toString());
+        messageMap.put("content","Order Number: " + outTradeNo);
+          // 2. Map -》 JSON
+        String message = JSON.toJSONString(messageMap);
+        webSocketServer.sendMessage(message);
     }
 
     /*
@@ -575,6 +587,38 @@ public class OrderServiceImpl implements OrderService {
             //配送距离超过5000米
             throw new OrderBusinessException("The delivery distance exceeds 5000 meters");
         }
+    }
+
+
+    /*
+    * 客户催单
+    * @pram Long id
+    * @return
+    * 流程：
+    *  1. 首先查找订单是否存在，并且状态为status == 2,3,4
+    *  2. 如果存在且状态正常，则发送催单通知，利用WebSocket发送消息
+    * */
+    @Override
+    public void reminder(Long id) {
+        Orders ordersDB = orderMapper.getById(id);
+        // 判断是否存在
+        if (ordersDB == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        // 判断状态
+        if (ordersDB.getStatus() < Orders.TO_BE_CONFIRMED || ordersDB.getStatus() > Orders.DELIVERY_IN_PROGRESS) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 发送催单通知
+          // 1. 构建Message Map,包含type,orderId,content
+        Map<String,String> messageMap = new HashMap<>();
+        messageMap.put("type","2"); // 2 表示催单提醒
+        messageMap.put("orderId",ordersDB.getId().toString());
+        messageMap.put("content","Order Number: " + ordersDB.getNumber() + " is being reminded by the customer.");
+          // 2. Map -》 JSON
+        String message = JSON.toJSONString(messageMap);
+        webSocketServer.sendMessage(message);
     }
 
 

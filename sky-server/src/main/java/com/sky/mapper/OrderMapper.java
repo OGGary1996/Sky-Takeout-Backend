@@ -7,6 +7,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.core.annotation.Order;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Mapper
 public interface OrderMapper {
     /*
@@ -54,4 +57,13 @@ public interface OrderMapper {
     * */
     @Select("SELECT COUNT(id) FROM orders WHERE status = #{status}")
     Integer countByStatus(Integer status);
+
+    /*
+    * 根据订单状态和下单时间查询订单列表
+    * 用于定时任务处理未支付订单
+    * @param status， boarderTime
+    * @return List<Orders>
+    * */
+    @Select("SELECT * FROM orders WHERE status = #{status} AND order_time <= #{boarderTime}")
+    List<Orders> listByStatusAndOrderTime(Integer status, LocalDateTime boarderTime);
 }

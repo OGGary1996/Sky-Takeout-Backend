@@ -141,4 +141,14 @@ public interface OrderService {
     *  2. 只有订单状态为派送中 status = 4 才能完成订单
     * */
     void complete(Long id);
+
+    /*
+    * 客户催单
+    * @pram Long id
+    * @return
+    * 流程：
+    *  1. 首先查找订单是否存在，并且状态为status == 2,3,4
+    *  2. 如果存在且状态正常，则发送催单通知，利用WebSocket发送消息
+    * */
+    void reminder(Long id);
 }
