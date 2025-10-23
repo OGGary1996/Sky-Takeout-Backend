@@ -33,10 +33,10 @@ public class OrderController {
     * */
     @GetMapping("/conditionSearch")
     @Operation(summary = "Condition Search", description = "Condition Search")
-    public Result<PageResult> conditionSearch(@RequestBody OrdersPageQueryDTO ordersPageQueryDTO) {
+    public Result<PageResult> conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
         log.info("Condition search: {}", ordersPageQueryDTO);
-        orderService.conditionSearch4Admin(ordersPageQueryDTO);
-        return null;
+        PageResult pageResult = orderService.conditionSearch4Admin(ordersPageQueryDTO);
+        return Result.success(pageResult);
     }
 
     /*
