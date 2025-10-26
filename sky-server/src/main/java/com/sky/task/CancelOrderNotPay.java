@@ -32,7 +32,7 @@ public class CancelOrderNotPay {
     public void cancelOrderNotPay() {
         log.info("Cancel order task started, Now time: {}", LocalDateTime.now());
         LocalDateTime boarderTime = LocalDateTime.now().plusMinutes(-15); // 未支付超过15分钟
-        List<Orders> orders = orderMapper.listByStatusAndOrderTime(Orders.UN_PAID, boarderTime);
+        List<Orders> orders = orderMapper.listByStatusAndOrderTime(Orders.PENDING_PAYMENT, boarderTime);
         orders.forEach(order -> {
             order.setStatus(Orders.CANCELLED);
             order.setCancelReason("Order not paid in time, system auto cancelled.");
